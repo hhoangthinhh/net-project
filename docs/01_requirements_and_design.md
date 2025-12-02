@@ -152,10 +152,14 @@ Chức năng:
   - Subnet: 192.168.40.0/24  
   - Default gateway: 192.168.40.1  
 
-- **VLAN 50 – DMZ (Server Zone)**  
-  - Subnet: 192.168.50.0/24  
+- **VLAN 50 – LAN Server**  
+  - Subnet: 192.168.50.0/26  
   - Default gateway: 192.168.50.1  
-  - Web server nội bộ sẽ sử dụng địa chỉ tĩnh, ví dụ: 192.168.50.10  
+  - Web server nội bộ sẽ sử dụng địa chỉ tĩnh, ví dụ: 192.168.50.10
+ 
+- **VLAN 51 – DMZ (Server Zone)**  
+  - Subnet: 192.168.50.64/26 
+  - Default gateway: 192.168.50.65 
 
 - **VLAN 60 – Guest Wifi**  
   - Subnet: 192.168.60.0/24  
