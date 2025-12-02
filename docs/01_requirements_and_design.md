@@ -136,35 +136,18 @@ Chức năng:
 
 ## 5. Thiết kế VLAN và Kế hoạch địa chỉ IP (IP Plan)
 
-- **VLAN 10 – Phòng Kinh doanh (Sales)**  
-  - Subnet: 192.168.10.0/24  
-  - Default gateway: 192.168.10.1 (trên router)  
+  ### Bảng phân hoạch VLAN và IP
 
-- **VLAN 20 – Phòng Kế toán (Accounting)**  
-  - Subnet: 192.168.20.0/24  
-  - Default gateway: 192.168.20.1  
-
-- **VLAN 30 – Phòng Kỹ thuật (Technical/IT)**  
-  - Subnet: 192.168.30.0/24  
-  - Default gateway: 192.168.30.1  
-
-- **VLAN 40 – Ban Giám đốc (BOD)**  
-  - Subnet: 192.168.40.0/24  
-  - Default gateway: 192.168.40.1  
-
-- **VLAN 50 – DMZ (Server Zone)**  
-  - Subnet: 192.168.50.0/24  
-  - Default gateway: 192.168.50.1  
-  - Web server nội bộ sẽ sử dụng địa chỉ tĩnh, ví dụ: 192.168.50.10  
-
-- **VLAN 60 – Guest Wifi**  
-  - Subnet: 192.168.60.0/24  
-  - Default gateway: 192.168.60.1  
-
-- **VLAN 99 – Management (tùy chọn)**  
-  - Subnet: 192.168.99.0/24  
-  - Default gateway: 192.168.99.1  
-  - Dùng để quản trị switch/router nếu cần.
+| VLAN | Tên          | Mục đích           | Subnet              | Gateway         | Ghi chú                         |
+|------|--------------|--------------------|---------------------|-----------------|---------------------------------|
+| 10   | SALES        | Phòng Kinh doanh   | 192.168.10.0/24     | 192.168.10.1    | PC Sales                        |
+| 20   | ACCOUNTING   | Phòng Kế toán      | 192.168.20.0/24     | 192.168.20.1    | PC Kế toán                      |
+| 30   | IT           | Phòng Kỹ thuật/IT  | 192.168.30.0/24     | 192.168.30.1    | PC IT                           |
+| 40   | BOD          | Ban Giám đốc       | 192.168.40.0/24     | 192.168.40.1    | PC/Bộ phận quản lý              |
+| 50   | SERVER_LAN   | Server nội bộ      | 192.168.50.0/26     | 192.168.50.1    | Web nội bộ: 192.168.50.10       |
+| 51   | DMZ          | Vùng DMZ           | 192.168.50.64/26    | 192.168.50.65   | Web/Service public              |
+| 60   | GUEST_WIFI   | WiFi Khách         | 192.168.60.0/24     | 192.168.60.1    | Chỉ ra Internet, chặn vào LAN   |
+| 99   | MGMT         | Quản trị thiết bị  | 192.168.99.0/24     | 192.168.99.1    | IP quản trị switch/router       |
 
 Ghi chú:
 - Guest VLAN không được phép truy cập VLAN nội bộ.
@@ -174,7 +157,51 @@ Ghi chú:
 
 ---
 
-## 6. Thiết kế luồng hoạt động (Traffic Flow)
+### 6. Bảng đặt tên thiết bị (Device Naming Convention)
+
+Hệ thống mạng sử dụng quy ước đặt tên thiết bị theo chuẩn doanh nghiệp, bao gồm loại thiết bị, chức năng và vị trí.  
+Điều này giúp quản lý cấu hình, giám sát và backup trở nên dễ dàng và nhất quán.
+
+| Tên thiết bị      | Loại thiết bị        | Vị trí / Vai trò                |
+|-------------------|----------------------|---------------------------------|
+| **ISP-R1**        | Router               | Kết nối ISP 1 (WAN)             |
+| **ISP-R2**        | Router               | Kết nối ISP 2 (WAN - dự phòng)  |
+| **EDGE-R1**       | Router               | Router biên của doanh nghiệp    |
+| **FW-01**         | Firewall             | Kiểm soát lưu lượng giữa WAN/LAN |
+| **CORE-SW1**      | Switch Layer 3       | Core Switch 1 (main)            |
+| **CORE-SW2**      | Switch Layer 3       | Core Switch 2 (redundancy)      |
+| **ACC-SW1**       | Switch Access        | Access Switch khu vực Sales & Accounting |
+| **ACC-SW2**       | Switch Access        | Access Switch khu vực IT & BOD |
+| **ACC-SW3**       | Switch Access        | Access Switch khu vực Server/DMZ |
+| **DMZ-SW1**       | Switch Access        | Switch dành riêng cho DMZ       |
+| **SRV-WEB01**     | Server (DMZ)         | Web Server (DMZ)                |
+| **SRV-DNS01**     | Server (LAN)         | DNS nội bộ                      |
+| **SRV-DHCP01**    | Server (LAN)         | DHCP Server                     |
+| **AP-INT01**      | Access Point         | WiFi nội bộ                     |
+| **AP-GUEST01**    | Access Point         | WiFi Guest                      |
+| **PC-SALES-xx**   | PC người dùng        | Phòng Kinh doanh                |
+| **PC-ACC-xx**     | PC người dùng        | Phòng Kế toán                   |
+| **PC-IT-xx**      | PC người dùng        | Phòng IT                        |
+| **PC-BOD-xx**     | PC người dùng        | Ban Giám Đốc                    |
+
+Quy ước đặt tên thiết bị được thiết kế theo chuẩn:
+<Loại thiết bị>-<Vị trí hoặc chức năng>-<Số thứ tự>
+
+Ví dụ:
+- CORE-SW1: Core Switch số 1
+- FW-01: Firewall thứ nhất
+- SRV-WEB01: Web Server số 1 (DMZ)
+- PC-IT-05: Máy tính thứ 5 của phòng IT
+
+Ưu điểm:
+- Dễ tìm thiết bị khi cấu hình
+- Dễ đọc log, Syslog, SNMP
+- Dễ đánh số IP phù hợp với tên
+- Dễ quản lý khi mở rộng hệ thống
+
+
+
+## 7. Thiết kế luồng hoạt động (Traffic Flow)
 
 ### **6.1. Luồng LAN → Internet**
 1. PC gửi traffic ra ngoài.
@@ -197,7 +224,7 @@ Ghi chú:
 
 ---
 
-## 7. Triển khai trên Cisco Packet Tracer và EVE-NG
+## 8. Triển khai trên Cisco Packet Tracer và EVE-NG
 
 ### **Cisco Packet Tracer**
 - Router-on-a-Stick
@@ -216,7 +243,7 @@ Ghi chú:
 
 ---
 
-## 8. Các module triển khai (Roadmap)
+## 9. Các module triển khai (Roadmap)
 
 1. **Module 1:** Phân tích và thiết kế tổng thể (tài liệu này)  
 2. **Module 2:** VLAN & Switching  
@@ -230,7 +257,7 @@ Ghi chú:
 
 ---
 
-## 9. Kết luận
+## 10. Kết luận
 
 Thiết kế trên cung cấp một hệ thống mạng chuẩn doanh nghiệp, bao gồm phân tầng 3-Tier, DMZ, WiFi Guest, Firewall Security Layer, HA Core Switch, và khả năng mô phỏng trên cả Cisco Packet Tracer và EVE-NG.
 
@@ -239,4 +266,7 @@ Thiết kế này đảm bảo:
 - Khả năng mở rộng
 - An toàn mạng
 - Phù hợp để demo, báo cáo, và đưa vào hồ sơ xin việc.
+
+
+
 
